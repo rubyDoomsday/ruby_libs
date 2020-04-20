@@ -1,0 +1,3 @@
+Validators are custom ActiveRecord Validations
+that can be added to the app/validators/ directory
+and be accessed in ActiveRecord models

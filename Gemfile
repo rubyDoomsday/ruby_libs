@@ -11,6 +11,13 @@ group :development, :test do
   gem "pry-byebug"
   gem "rspec-rails"
   gem "rubocop"
+
+  # rest
+  gem "rest-client"
+  gem "webmock"
+
+  # cronofy
+  gem "tzinfo"
 end
 
 group :development do
@@ -21,7 +28,7 @@ group :development do
 end
 
 group :test do
-  gem "factory_bot", "~> 5.0", ">= 5.0.2"
+  gem "factory_bot"
   gem "faker", "~> 2.1"
   gem "shoulda-matchers", "~> 4.2"
 end

@@ -30,21 +30,18 @@ class PhoneNumber
   alias nxx prefix
   alias xxxx subscriber
 
-  # @param primitive [String|Integer] the unformatted phone number
-  def initialize(primitive)
-    raise FormatError, "invalid format" if !primitive.respond_to?(:to_s) || primitive.length < 7
-    raise FormatError, "#{primitive} has invalid characters" unless primitive.match?(VALID_CHARACTERS)
+  # @param value [String|Integer] the unformatted phone number
+  def initialize(value)
+    raise FormatError, "invalid format" unless value.respond_to?(:to_s) && (value = value.to_s)
+    raise FormatError, "invalid format" if value.length < 7 || !value.match?(VALID_CHARACTERS)
 
-    @primitive = primitive
-
-    @sections = parse_primitive(primitive)
-    raise FormatError, "invalid format" if @sections.empty?
-
+    @primitive = value
+    @sections  = parse_primitive(@primitive)
     load_instance_vars(@sections.dup)
   end
 
   # @return [String] The primitive phone number.
-  # This will ensure compliance if a PhoneNumber is used during string
+  # This will ensure compliance if PhoneNumber is used during string
   # interpolation throughout the application without interference.
   def to_s
     @primitive
@@ -80,7 +77,7 @@ class PhoneNumber
     return if flags.empty?
 
     flags.each_with_object([]) do |f, result|
-      next unless (flag = f.match(/(\+|C|NPA|NXX|XXXX)/))
+      next unless flag = f.match(/(\+|C|NPA|NXX|XXXX)/)
 
       result << construct(flag)
     end.join
@@ -105,7 +102,7 @@ class PhoneNumber
     case raw_section.length
     when 11      then [raw_section.slice!(0), parse_section(raw_section)].flatten
     when 7, 10   then [raw_section.slice!(0..2), parse_section(raw_section)].flatten
-    when 1, 3, 4 then raw_section
+    else raw_section unless raw_section.empty?
     end
   end
 
@@ -119,49 +116,56 @@ class PhoneNumber
     substitution_alias = portion_key.downcase
     flag.string.sub(portion_key, send(substitution_alias))
   rescue TypeError
-    case portion_key
-    when "NPA" then raise FormatError, "invalid area code"
-    when "NXX" then raise FormatError, "invalid prefix"
-    when "XXXX" then raise FormatError, "invalid subscriber"
-    else raise FormatError, "invalid format"
-    end
+    raise FormatError, "invalid format"
   end
 
   def load_instance_vars(sections)
+    raise FormatError, "invalid format" if sections.empty?
+
     # processing order is important here
     @country_code = load_country_code(sections)
     @area_code    = load_area_code(sections)
     @prefix       = load_prefix(sections)
     @subscriber   = load_subscriber(sections)
+  rescue StandardError => e
+    raise FormatError, e.message
   end
 
   # C: Is the single digit country code
   def load_country_code(sections)
-    # Assumes all phone numbers are USA unless specified
-    if COUNTRY_CODES.include?(sections.first)
-      sections.shift
-    else
-      sections.delete(sections.first)
-      USA
-    end
+    # For now we assume all phone numbers are USA centric. If we wish to support other country
+    # codes in the future we will need to enforce the presence of a country code when entering
+    # a phone number
+    return USA unless sections.first.length == 1
+
+    raise "Unsupported Country Code" unless COUNTRY_CODES.include?(sections.first)
+
+    sections.shift
   end
 
   # NPA: Is the three digit area code
   def load_area_code(sections)
-    return if sections.empty? || sections.first.length < 3
+    return if sections.empty? || sections.first.length != 3
 
-    sections.shift if sections.second.length == 3
+    raise "invalid area code" unless sections.second&.length == 3
+
+    sections.shift
   end
 
   # NXX: Subscriber prefix for the local central office
   def load_prefix(sections)
     return if sections.empty? || sections.first.length < 3
 
-    sections.shift if sections.second.length == 4
+    raise "invalid prefix" unless sections.second.to_s&.length >= 4
+
+    sections.shift
   end
 
   # XXXX: Is the specific subscriber number
   def load_subscriber(sections)
-    sections.shift if sections.first&.length == 4
+    raise "invalid subscriber" unless sections.first&.length == 4
+
+    sections.shift
   end
 end
+

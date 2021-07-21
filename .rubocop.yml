@@ -24,7 +24,7 @@ Layout/ClassStructure:
 # https://rubocop.readthedocs.io/en/latest/cops_layout/#layoutdotposition
 Layout/DotPosition:
   Enabled: true
-  EnforcedStyle: trailing
+  EnforcedStyle: leading
 
 # https://rubydoc.info/gems/rubocop/0.69.0/RuboCop/Cop/Layout/AlignHash (Official docs)
 # https://github.com/rubocop-hq/rubocop/pull/6649 (Allow cop to accept two options)

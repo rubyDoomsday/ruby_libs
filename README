@@ -1,6 +1,15 @@
 # Rails Libs
 
-Not worhty of becoming their own gems but this is
-a cache for libraries I have written and used in
-various projects along the way that are plug and
-play for Rails projects.
+Not worhty of becoming their own gems but this is a cache for libraries I have
+written and used in various projects along the way that are plug and play for
+Rails projects. Maybe someday I'll build gems for them but until then they are
+here for safe keeping
+
+# Git Hook
+
+This repo includes a list of Ruby centric git hooks that may come in handy
+
+```bash
+GIT_DIR=$(git rev-parse --git-dir)
+ln -s ../../.git_hooks/pre-commit-hooks $GIT_DIR/hooks/pre-commit
+```
